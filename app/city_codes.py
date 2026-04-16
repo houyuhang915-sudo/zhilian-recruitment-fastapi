@@ -1,0 +1,28 @@
+from __future__ import annotations
+
+HOT_CITY_CODES: list[dict[str, str]] = [
+    {"code": "530", "name": "北京", "en_name": "BEIJING"},
+    {"code": "538", "name": "上海", "en_name": "SHANGHAI"},
+    {"code": "763", "name": "广州", "en_name": "GUANGZHOU"},
+    {"code": "765", "name": "深圳", "en_name": "SHENZHEN"},
+    {"code": "531", "name": "天津", "en_name": "TIANJIN"},
+    {"code": "736", "name": "武汉", "en_name": "WUHAN"},
+    {"code": "854", "name": "西安", "en_name": "XIAN"},
+    {"code": "801", "name": "成都", "en_name": "CHENGDU"},
+    {"code": "600", "name": "大连", "en_name": "DALIAN"},
+    {"code": "613", "name": "长春", "en_name": "CHANGCHUN"},
+    {"code": "599", "name": "沈阳", "en_name": "SHENYANG"},
+    {"code": "635", "name": "南京", "en_name": "NANJING"},
+    {"code": "702", "name": "济南", "en_name": "JINAN"},
+    {"code": "703", "name": "青岛", "en_name": "QINGDAO"},
+    {"code": "653", "name": "杭州", "en_name": "HANGZHOU"},
+    {"code": "639", "name": "苏州", "en_name": "SUZHOU"},
+    {"code": "636", "name": "无锡", "en_name": "WUXI"},
+    {"code": "654", "name": "宁波", "en_name": "NINGBO"},
+    {"code": "551", "name": "重庆", "en_name": "CHONGQING"},
+    {"code": "719", "name": "郑州", "en_name": "ZHENGZHOU"},
+    {"code": "749", "name": "长沙", "en_name": "CHANGSHA"},
+    {"code": "681", "name": "福州", "en_name": "FUZHOU"},
+    {"code": "682", "name": "厦门", "en_name": "XIAMEN"},
+    {"code": "622", "name": "哈尔滨", "en_name": "HAERBIN"},
+]

@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .service import (
     ZhilianClient,
     ZhilianUpstreamError,
+    normalize_city_codes_response,
     normalize_detail_response,
     normalize_search_response,
 )
@@ -86,6 +87,30 @@ async def job_detail(job_number: str) -> dict[str, object]:
         raise HTTPException(status_code=error.status_code, detail=error.payload | {"message": str(error)}) from error
 
     return normalize_detail_response(raw, request_id=request_id)
+
+
+@app.get("/api/v1/meta/cities")
+@app.get("/api/v1/meta/city-codes")
+async def city_codes(
+    include_districts: bool = Query(
+        False,
+        description="Whether to include district-level codes returned by the upstream base data endpoint.",
+    )
+) -> dict[str, object]:
+    try:
+        raw, request_id = await client.get_base_data()
+    except ZhilianUpstreamError:
+        return normalize_city_codes_response(
+            None,
+            include_districts=include_districts,
+            request_id="",
+        )
+
+    return normalize_city_codes_response(
+        raw,
+        include_districts=include_districts,
+        request_id=request_id,
+    )
 
 
 if __name__ == "__main__":

@@ -4,12 +4,15 @@ Open-source `FastAPI` wrapper for Zhilian recruitment search and job detail endp
 
 This repository contains code only. It does **not** ship scraped job datasets.
 
+[简体中文说明](./README.zh-CN.md)
+
 ## Features
 
 - search jobs by keyword and city code
 - fetch job detail by Zhilian job number
 - normalize upstream fields into a cleaner recruitment schema
 - expose both platform-native and generic recruitment API paths
+- include built-in hot city code mappings and a live city metadata endpoint
 
 ## Endpoints
 
@@ -18,6 +21,8 @@ This repository contains code only. It does **not** ship scraped job datasets.
 - `GET /api/v1/zhilian/jobs/{job_number}`
 - `GET /api/v1/recruitment/feed`
 - `GET /api/v1/recruitment/jobs/{job_number}`
+- `GET /api/v1/meta/cities`
+- `GET /api/v1/meta/city-codes`
 
 ## Quick start
 
@@ -46,6 +51,13 @@ curl "http://127.0.0.1:8010/api/v1/zhilian/search?keyword=Python&city_code=530&p
 curl "http://127.0.0.1:8010/api/v1/zhilian/jobs/CC000544460J40723865416"
 ```
 
+## City code example
+
+```bash
+curl "http://127.0.0.1:8010/api/v1/meta/cities"
+curl "http://127.0.0.1:8010/api/v1/meta/cities?include_districts=true"
+```
+
 ## Notes
 
 - this project wraps Zhilian web endpoints observed from the public site frontend
@@ -61,6 +73,10 @@ curl "http://127.0.0.1:8010/api/v1/zhilian/jobs/CC000544460J40723865416"
 - `HOST` default: `0.0.0.0`
 - `PORT` default: `8010`
 - `RELOAD` default: `false`
+
+## Deployment
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md).
 
 ## License
 

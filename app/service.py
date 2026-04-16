@@ -7,6 +7,8 @@ from typing import Any
 
 import httpx
 
+from .city_codes import HOT_CITY_CODES
+
 
 ZHILIAN_API_BASE = os.getenv("ZHILIAN_API_BASE", "https://fe-api.zhaopin.com")
 ZHILIAN_PLATFORM = int(os.getenv("ZHILIAN_PLATFORM", "13"))
@@ -95,6 +97,13 @@ class ZhilianClient:
         self._ensure_ok(data, request_id=request_id)
         return data, request_id
 
+    async def get_base_data(self) -> tuple[dict[str, Any], str]:
+        response = await self._get("/c/i/search/base/data", params={})
+        request_id = response.headers.get("x-zp-request-id", "")
+        data = response.json()
+        self._ensure_ok(data, request_id=request_id)
+        return data, request_id
+
     async def _post(self, path: str, *, json: dict[str, Any]) -> httpx.Response:
         async with httpx.AsyncClient(timeout=self.timeout, headers=DEFAULT_HEADERS) as client:
             response = await client.post(f"{self.base_url}{path}", json=json)
@@ -169,6 +178,38 @@ def normalize_detail_response(raw: dict[str, Any], *, request_id: str) -> dict[s
         "upstream": {
             "task_id": data.get("taskId"),
         },
+    }
+
+
+def normalize_city_codes_response(
+    raw: dict[str, Any] | None,
+    *,
+    include_districts: bool,
+    request_id: str,
+) -> dict[str, Any]:
+    if not raw:
+        return {
+            "success": True,
+            "items": HOT_CITY_CODES,
+            "count": len(HOT_CITY_CODES),
+            "request_id": request_id,
+            "source": "static_fallback",
+        }
+
+    data = raw.get("data", {})
+    items = flatten_city_data(data.get("allCity") or [], include_districts=include_districts)
+    hot_codes = {item["code"] for item in data.get("hotCity") or [] if item.get("code")}
+    for item in items:
+        item["is_hot"] = item["code"] in hot_codes
+
+    items = merge_hot_cities(items)
+
+    return {
+        "success": True,
+        "items": items,
+        "count": len(items),
+        "request_id": request_id,
+        "source": "zhilian_base_data",
     }
 
 
@@ -484,3 +525,58 @@ def normalize_position_url(url: str) -> str:
 
 def now_iso() -> str:
     return datetime.now(timezone.utc).astimezone().isoformat()
+
+
+def flatten_city_data(groups: list[dict[str, Any]], *, include_districts: bool) -> list[dict[str, Any]]:
+    items: list[dict[str, Any]] = []
+
+    for group in groups:
+        province_name = group.get("name") or ""
+        for city in group.get("sublist") or []:
+            name = str(city.get("name") or "").strip()
+            code = str(city.get("code") or "").strip()
+            en_name = str(city.get("en_name") or "").strip()
+            if not name or not code:
+                continue
+            if not include_districts and looks_like_district(name):
+                continue
+            items.append(
+                {
+                    "code": code,
+                    "name": name,
+                    "en_name": en_name,
+                    "province": province_name,
+                }
+            )
+
+    deduped: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for item in items:
+        if item["code"] in seen:
+            continue
+        seen.add(item["code"])
+        deduped.append(item)
+    return deduped
+
+
+def merge_hot_cities(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    merged = list(items)
+    existing_codes = {item["code"] for item in merged}
+    for item in HOT_CITY_CODES:
+        if item["code"] not in existing_codes:
+            merged.append(
+                {
+                    "code": item["code"],
+                    "name": item["name"],
+                    "en_name": item["en_name"],
+                    "province": item["name"],
+                    "is_hot": True,
+                }
+            )
+    merged.sort(key=lambda item: (0 if item.get("is_hot") else 1, item["code"]))
+    return merged
+
+
+def looks_like_district(name: str) -> bool:
+    suffixes = ("区", "县", "新区", "自治县", "旗", "群岛")
+    return name.endswith(suffixes)
