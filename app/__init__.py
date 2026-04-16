@@ -1,0 +1,1 @@
+"""Zhilian recruitment FastAPI application."""
